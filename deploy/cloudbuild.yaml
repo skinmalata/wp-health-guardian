@@ -1,0 +1,28 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app', '-f', 'deploy/Dockerfile', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'wordpress-health-guardian'
+      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=GOOGLE_API_KEY=${_GOOGLE_API_KEY}'
+      - '--set-env-vars=DT_ENVIRONMENT=${_DT_ENVIRONMENT}'
+      - '--set-env-vars=DT_PLATFORM_TOKEN=${_DT_PLATFORM_TOKEN}'
+
+substitutions:
+  _GOOGLE_API_KEY: ''
+  _DT_ENVIRONMENT: ''
+  _DT_PLATFORM_TOKEN: ''
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app'

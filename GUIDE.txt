@@ -1,0 +1,371 @@
+================================================================================
+  WORDPRESS HEALTH GUARDIAN — HACKATHON SUBMISSION GUIDE
+  Google Cloud Rapid Agent Hackathon | Dynatrace Track
+  Deadline: June 11, 2026 @ 2:00pm PDT
+================================================================================
+
+YOUR PROJECT: C:\Users\Toks\Documents\Apps\wordpress-health-guardian
+
+
+TABLE OF CONTENTS
+───────────────────────────────────────────────────────────────────────────────
+1.  PROJECT OVERVIEW
+2.  WHAT WAS BUILT
+3.  PREREQUISITES
+4.  STEP 1: REGISTER FOR THE HACKATHON
+5.  STEP 2: GET GOOGLE CLOUD CREDITS
+6.  STEP 3: SET UP GEMINI API KEY
+7.  STEP 4: SET UP DYNATRACE TENANT (RECOMMENDED)
+8.  STEP 5: TEST THE AGENT LOCALLY
+9.  STEP 6: DEPLOY TO CLOUD RUN
+10. STEP 7: CREATE YOUR DEMO VIDEO
+11. STEP 8: SUBMIT TO DEVPOST
+12. FAQ
+13. COMMANDS CHEAT SHEET
+
+
+1. PROJECT OVERVIEW
+───────────────────────────────────────────────────────────────────────────────
+
+The WordPress Health Guardian is an AI agent that:
+
+  • Monitors WordPress site health (uptime, SSL, DNS, WP endpoints)
+  • Uses Google Gemini for intelligent analysis
+  • Integrates with Dynatrace MCP for deep observability (optional)
+  • Generates structured health reports with scores & recommendations
+  • Provides a clean web UI dashboard
+
+Tech Stack:
+  • Google ADK (Agent Development Kit) — agent framework
+  • Gemini 2.5 Flash — LLM
+  • Dynatrace MCP — observability integration
+  • FastAPI + HTML/CSS — web UI
+  • Cloud Run — deployment target
+
+Judging criteria addressed:
+  • Technological Implementation — ADK + Gemini + Dynatrace MCP + Cloud Run
+  • Design — Clean dark-mode web UI with score visualization
+  • Potential Impact — 60M+ WordPress sites need monitoring
+  • Quality of the Idea — Novel AI agent + observability for WordPress
+
+
+2. WHAT WAS BUILT
+───────────────────────────────────────────────────────────────────────────────
+
+File structure:
+  wordpress-health-guardian/
+    agent/
+      main.py                 — ADK agent definition
+      tools/
+        health_check.py       — uptime, SSL, DNS, WP endpoint checks
+        analyzer.py           — report generation & markdown formatting
+        dynatrace_tools.py    — Dynatrace MCP integration
+    web/
+      server.py               — FastAPI REST server
+      static/index.html       — Web UI dashboard
+    deploy/
+      Dockerfile              — container for Cloud Run
+      cloudbuild.yaml         — CI/CD pipeline
+    tests/
+      test_agent.py           — 6 unit tests (all passing)
+    app.py                    — entry point
+    requirements.txt          — Python dependencies
+    README.md                 — full project documentation
+    LICENSE                   — MIT license
+
+Key agent tools:
+  1. check_site_uptime(url)        — HTTP status & response time
+  2. check_ssl_certificate(host)   — SSL expiry check
+  3. check_dns_resolution(host)    — DNS resolution
+  4. check_wordpress_specific(url) — /wp-admin, /wp-json, etc.
+  5. generate_health_report(...)   — structured report builder
+  6. format_report_for_display()   — markdown formatter
+  7. check_dynatrace_config()      — checks DT env vars
+  8. [Dynatrace MCP tools]         — problems, vulnerabilities, DQL (if configured)
+
+
+3. PREREQUISITES
+───────────────────────────────────────────────────────────────────────────────
+
+  ✓ Python 3.10+            — installed (3.14.3)
+  ✓ Git                     — installed (2.53.0)
+  ✓ pip                     — installed
+  ✓ uv                      — installed
+  ✗ Google Cloud CLI        — NEED TO INSTALL
+  ✗ Gemini API key          — NEED TO GET
+  ✗ Dynatrace tenant        — OPTIONAL (improves score)
+
+Install Google Cloud CLI:
+  https://cloud.google.com/sdk/docs/install
+  After install, run:
+    gcloud init
+    gcloud auth login
+
+
+4. STEP 1: REGISTER FOR THE HACKATHON
+───────────────────────────────────────────────────────────────────────────────
+
+  1. Go to https://rapid-agent.devpost.com/
+  2. Click "Join hackathon" (need Devpost account)
+  3. Verify eligibility (age of majority, not in excluded countries)
+
+  IMPORTANT: You must register BEFORE submitting. Do this now.
+
+
+5. STEP 2: GET GOOGLE CLOUD CREDITS
+───────────────────────────────────────────────────────────────────────────────
+
+  Option A — Free Trial (instant):
+    1. Go to https://console.cloud.google.com/freetrial
+    2. Sign up with Google account
+    3. Get $300 in credits (no charge)
+
+  Option B — Additional $100 credits (for existing accounts):
+    1. Go to https://forms.gle/xfv9vQzfRfNCCVbG7
+    2. Deadline: June 4, 2026
+    3. Approved within 1-5 business days
+
+  After setup, create a project:
+    gcloud projects create wp-health-guardian-hackathon
+    gcloud config set project wp-health-guardian-hackathon
+
+
+6. STEP 3: SET UP GEMINI API KEY
+───────────────────────────────────────────────────────────────────────────────
+
+  1. Go to https://aistudio.google.com/apikey
+  2. Click "Create API Key"
+  3. Select your Google Cloud project
+  4. Copy the key
+
+  5. Create .env file:
+     Copy .env.example to .env
+     Edit with your key:
+       GOOGLE_API_KEY=AIza...your-key-here
+       GOOGLE_CLOUD_PROJECT=wp-health-guardian-hackathon
+
+  The agent uses "gemini-2.5-flash" model by default.
+  This model is fast, cheap, and excellent for agent reasoning.
+
+
+7. STEP 4: SET UP DYNATRACE TENANT (HIGHLY RECOMMENDED)
+───────────────────────────────────────────────────────────────────────────────
+
+  Dynatrace integration is what makes your submission stand out.
+  Without it, you still have a functional agent, but WITH it you
+  demonstrate the full partner MCP integration required for the track.
+
+  Setup:
+    1. Go to https://www.dynatrace.com/signup/ (free trial, no credit card)
+    2. After signup, you get a Dynatrace Platform URL like:
+       https://abc12345.apps.dynatrace.com
+    3. Generate a Platform Token:
+       - Settings → Integration → Platform Tokens
+       - Create token with permissions:
+         • mcp-gateway:servers:invoke
+         • mcp-gateway:servers:read
+         • storage:logs:read (for DQL queries)
+    4. Add to .env:
+       DT_ENVIRONMENT=https://abc12345.apps.dynatrace.com
+       DT_PLATFORM_TOKEN=dt0c01...your-token
+
+  For demo purposes you can also:
+  • Use the Dynatrace Playground: https://playground.apps.dynatrace.com
+    (Note: may have limited data, but good for testing MCP connection)
+
+
+8. STEP 5: TEST THE AGENT LOCALLY
+───────────────────────────────────────────────────────────────────────────────
+
+  Create .env file first (see steps above), then:
+
+    cd C:\Users\Toks\Documents\Apps\wordpress-health-guardian
+    python app.py
+
+  This starts the server at http://localhost:8080
+
+  Open your browser and:
+  1. Enter a URL (e.g., https://wordpress.org)
+  2. Click "Run Health Check"
+  3. The agent will check uptime, SSL, DNS, WordPress endpoints
+  4. It will generate a report with health score
+
+  You can also test the API directly:
+    curl http://localhost:8080/api/check?url=https://wordpress.org
+
+  To run tests:
+    python -m pytest tests/ -v
+
+  NOTE: If you get API key errors, make sure .env is in the
+  root directory and GOOGLE_API_KEY is set correctly.
+
+
+9. STEP 6: DEPLOY TO CLOUD RUN
+───────────────────────────────────────────────────────────────────────────────
+
+  Prerequisites:
+  • Google Cloud CLI installed and authenticated
+  • Billing enabled on your project
+  • Required APIs enabled:
+      gcloud services enable run.googleapis.com
+      gcloud services enable cloudbuild.googleapis.com
+      gcloud services enable artifactregistry.googleapis.com
+      gcloud services enable aiplatform.googleapis.com
+
+  Deploy:
+    gcloud run deploy wordpress-health-guardian ^
+      --source . ^
+      --region=us-central1 ^
+      --allow-unauthenticated ^
+      --set-env-vars=GOOGLE_API_KEY=AIza...your-key
+
+  If you have Dynatrace configured, also add:
+      --set-env-vars=DT_ENVIRONMENT=https://... ^
+      --set-env-vars=DT_PLATFORM_TOKEN=dt0c01...
+
+  After deployment, you'll get a URL like:
+    https://wordpress-health-guardian-xxxxx-uc.a.run.app
+
+  Keep this URL — you need it for the submission!
+
+
+10. STEP 7: CREATE YOUR DEMO VIDEO
+───────────────────────────────────────────────────────────────────────────────
+
+  Requirements:
+  • Max 3 minutes
+  • English (or English subtitles)
+  • Upload to YouTube or Vimeo (unlisted is fine)
+  • Show the working agent
+
+  Suggested script:
+
+  [0:00-0:30] Introduction
+    "Hi, I'm Tochukwu Mesigo. This is WordPress Health Guardian,
+    an AI agent built with Google ADK, Gemini, and Dynatrace MCP
+    for the Google Cloud Rapid Agent Hackathon."
+
+  [0:30-1:30] Show the agent checking a site
+    • Open the web UI
+    • Enter https://wordpress.org
+    • Click "Run Health Check"
+    • Show the agent running checks (uptime, SSL, DNS, WP endpoints)
+    • Show the generated report with health score
+
+  [1:30-2:30] Show Dynatrace integration (if configured)
+    • Check the "Use Dynatrace" checkbox
+    • Run again
+    • Show how Dynatrace provides deeper insights
+    • Show Dynatrace problems, vulnerabilities, or DQL data
+
+  [2:30-3:00] Summary & call to action
+    "This agent can help millions of WordPress site owners
+    monitor their sites proactively. The code is open source
+    on GitHub. Thanks for watching!"
+
+  Recording tools:
+  • OBS Studio (free) — https://obsproject.com/
+  • Windows Game Bar — Win+G
+  • ScreenRec — https://screenrec.com/
+
+
+11. STEP 8: SUBMIT TO DEVPOST
+───────────────────────────────────────────────────────────────────────────────
+
+  Deadline: June 11, 2026 @ 2:00pm PDT
+
+  What to prepare:
+
+  [A] Public GitHub Repository
+    1. Create a repo on GitHub (public)
+    2. Push your code:
+       git remote add origin https://github.com/your-username/wp-health-guardian.git
+       git branch -M main
+       git push -u origin main
+    3. Make sure LICENSE file is visible in the "About" section
+       (Go to repo → About → add MIT license topic)
+
+  [B] Hosted Project URL
+    Your Cloud Run URL from Step 6
+
+  [C] Demo Video
+    YouTube or Vimeo link (~3 minutes)
+
+  [D] Description
+    Write a compelling description:
+    • What problem it solves
+    • How it works (technologies used)
+    • Why it matters (60M+ WordPress sites)
+
+  [E] Select Your Track
+    Choose "Dynatrace" as your partner track
+
+  Submission checklist:
+    ☐ Registered on Devpost
+    ☐ Public GitHub repo with MIT license
+    ☐ Cloud Run URL (working)
+    ☐ Demo video uploaded
+    ☐ Description written
+    ☐ Dynatrace track selected
+    ☐ All fields filled out on Devpost form
+
+
+12. FAQ
+───────────────────────────────────────────────────────────────────────────────
+
+  Q: I don't have a Dynatrace tenant. Can I still submit?
+  A: Yes, the agent works without Dynatrace (basic health checks +
+     Gemini analysis). But for the Dynatrace track, you need MCP
+     integration. Get a free trial at dynatrace.com/signup.
+
+  Q: Can I use Claude/Cursor/Copilot?
+  A: NO! The rules forbid competing AI tools. Only Google's
+     tools are permitted (Gemini CLI, AntiGravity, etc.).
+
+  Q: Can I submit from Nigeria?
+  A: Check the rules. Nigeria is not in the excluded list.
+
+  Q: Is my project eligible? It was created during the contest period.
+  A: Yes, the project files were created on May 22, 2026, which is
+     within the contest period (May 5 — June 11, 2026).
+
+  Q: Can I have a team?
+  A: Max 4 people. Currently you're solo. If you want teammates,
+     find them before submitting.
+
+  Q: How much does Cloud Run cost?
+  A: With the free tier + $100 in credits, it will be free.
+     The agent only runs when users make requests.
+
+  Q: What if I can't deploy to Cloud Run?
+  A: The hackathon says ADK agents can run locally. You can still
+     submit with a local setup and show it working in the video.
+
+
+13. COMMANDS CHEAT SHEET
+───────────────────────────────────────────────────────────────────────────────
+
+  Run agent locally:
+    cd C:\Users\Toks\Documents\Apps\wordpress-health-guardian
+    python app.py
+
+  Run tests:
+    python -m pytest tests/ -v
+
+  Deploy to Cloud Run:
+    gcloud run deploy wordpress-health-guardian --source . --region=us-central1 --allow-unauthenticated --set-env-vars=GOOGLE_API_KEY=your_key
+
+  Push to GitHub:
+    git add -A
+    git commit -m "Initial commit: WordPress Health Guardian agent"
+    git remote add origin https://github.com/your-username/wp-health-guardian.git
+    git branch -M main
+    git push -u origin main
+
+  Check Dynatrace MCP (verify setup):
+    npx -y @dynatrace-oss/dynatrace-mcp-server
+
+════════════════════════════════════════════════════════════════════════════════
+  GOOD LUCK! You've built a strong submission. Follow these steps
+  carefully and you'll have a competitive entry for the $5,000 prize.
+════════════════════════════════════════════════════════════════════════════════

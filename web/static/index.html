@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordPress Health Guardian</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e293b, #334155); padding: 30px; text-align: center; border-bottom: 1px solid #475569; }
+        .header h1 { font-size: 28px; background: linear-gradient(90deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: #94a3b8; margin-top: 8px; font-size: 14px; }
+        .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #334155; }
+        .card h2 { font-size: 18px; margin-bottom: 16px; color: #f1f5f9; }
+        .input-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .input-group input { flex: 1; min-width: 200px; padding: 12px 16px; background: #0f172a; border: 1px solid #475569; border-radius: 8px; color: #e2e8f0; font-size: 14px; }
+        .input-group input:focus { outline: none; border-color: #60a5fa; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+        .checkbox-group label { font-size: 14px; color: #94a3b8; cursor: pointer; }
+        .btn { padding: 12px 24px; background: linear-gradient(135deg, #60a5fa, #a78bfa); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 12px; }
+        .badge-healthy { background: #065f46; color: #6ee7b7; }
+        .badge-warning { background: #78350f; color: #fcd34d; }
+        .badge-critical { background: #7f1d1d; color: #fca5a5; }
+        .badge-info { background: #1e3a5f; color: #93c5fd; }
+        .badge-pending { background: #374151; color: #9ca3af; }
+        .report-section { margin: 16px 0; }
+        .report-section h3 { font-size: 15px; color: #94a3b8; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .check-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 6px 0; background: #0f172a; border-radius: 6px; font-size: 14px; }
+        .check-item .icon { font-size: 16px; }
+        .check-item .detail { color: #cbd5e1; flex: 1; }
+        .recommendation-item { padding: 10px 12px; margin: 6px 0; background: #0f172a; border-radius: 6px; font-size: 14px; border-left: 3px solid #60a5fa; }
+        .score-ring { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; font-weight: 700; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; text-align: center; }
+        .summary-item { padding: 16px; background: #0f172a; border-radius: 8px; }
+        .summary-item .value { font-size: 24px; font-weight: 700; color: #f1f5f9; }
+        .summary-item .label { font-size: 12px; color: #64748b; margin-top: 4px; }
+        .loading-spinner { text-align: center; padding: 40px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #334155; border-top-color: #60a5fa; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { background: #7f1d1d; color: #fca5a5; padding: 12px 16px; border-radius: 8px; margin: 12px 0; }
+        .placeholder { text-align: center; padding: 40px; color: #64748b; }
+        .placeholder-icon { font-size: 48px; margin-bottom: 12px; }
+        .example-sites { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .example-tag { padding: 4px 10px; background: #334155; border-radius: 4px; font-size: 12px; color: #94a3b8; cursor: pointer; }
+        .example-tag:hover { background: #475569; }
+        pre { white-space: pre-wrap; font-family: inherit; }
+        .footer { text-align: center; padding: 20px; color: #475569; font-size: 12px; }
+        .output-content { line-height: 1.6; }
+        .output-content h1 { font-size: 20px; margin: 16px 0 8px; color: #f1f5f9; }
+        .output-content h2 { font-size: 16px; margin: 12px 0 8px; color: #e2e8f0; }
+        .output-content strong { color: #f1f5f9; }
+        @media (max-width: 600px) { .input-group { flex-direction: column; } .input-group input { min-width: auto; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>WordPress Health Guardian</h1>
+        <p>AI-powered WordPress site monitoring & diagnostics agent</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Check a WordPress Site</h2>
+            <div class="input-group">
+                <input type="url" id="siteUrl" placeholder="https://example.com" value="https://wordpress.org">
+                <button onclick="checkSite()" class="btn" id="checkBtn">Run Health Check</button>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="useDynatrace">
+                <label for="useDynatrace">Use Dynatrace for deeper observability (requires configured Dynatrace tenant)</label>
+            </div>
+            <div class="example-sites">
+                <span class="example-tag" onclick="setExample('https://wordpress.org')">wordpress.org</span>
+                <span class="example-tag" onclick="setExample('https://www.php.net')">php.net</span>
+                <span class="example-tag" onclick="setExample('https://github.com')">github.com</span>
+            </div>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <div class="footer">Built with Google ADK, Gemini, and Dynatrace MCP for the Google Cloud Rapid Agent Hackathon</div>
+
+    <script>
+        function setExample(url) {
+            document.getElementById('siteUrl').value = url;
+        }
+
+        async function checkSite() {
+            const url = document.getElementById('siteUrl').value.trim();
+            const useDynatrace = document.getElementById('useDynatrace').checked;
+            const btn = document.getElementById('checkBtn');
+
+            if (!url) {
+                showError('Please enter a URL');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Running health check...';
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <div class="card">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Running comprehensive health check on <strong>${escapeHtml(url)}</strong>...</p>
+                        <p style="font-size: 13px; color: #64748b; margin-top: 8px;">Checking uptime, SSL, DNS, WordPress endpoints${useDynatrace ? ', and Dynatrace observability' : ''}...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const params = new URLSearchParams({ url, use_dynatrace: useDynatrace });
+                const response = await fetch(`/api/check?${params}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                renderResult(url, data.result);
+
+            } catch (err) {
+                showError('Failed to connect to the server: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run Health Check';
+            }
+        }
+
+        function renderResult(url, resultText) {
+            const resultDiv = document.getElementById('result');
+
+            const statusMatch = resultText.match(/\*\*Status:\*\*\s*(\w+)/i);
+            const scoreMatch = resultText.match(/\*\*Health Score:\*\*\s*(\d+)/);
+            const issuesMatch = resultText.match(/\*\*Issues Found:\*\*\s*(\d+)/);
+
+            const status = statusMatch ? statusMatch[1].toLowerCase() : 'unknown';
+            const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+            const issues = issuesMatch ? parseInt(issuesMatch[1]) : 0;
+
+            const statusBadgeClass = {
+                healthy: 'badge-healthy',
+                warning: 'badge-warning',
+                critical: 'badge-critical',
+            }[status] || 'badge-info';
+
+            const statusLabel = status.toUpperCase();
+
+            const scoreColor = score >= 80 ? '#6ee7b7' : score >= 50 ? '#fcd34d' : '#fca5a5';
+            const scoreBorder = score >= 80 ? '#065f46' : score >= 50 ? '#78350f' : '#7f1d1d';
+
+            const lines = resultText.split('\n');
+            let checksHtml = '';
+            let recommendationsHtml = '';
+            let inChecks = false;
+            let inRecommendations = false;
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+
+                if (trimmed === '## Checks') { inChecks = true; inRecommendations = false; continue; }
+                if (trimmed === '## Recommendations') { inChecks = false; inRecommendations = true; continue; }
+                if (trimmed.startsWith('## ')) { inChecks = false; inRecommendations = false; }
+                if (trimmed.startsWith('# ') || trimmed.startsWith('**') || trimmed === '' || trimmed.startsWith('- **')) continue;
+
+                if (inChecks && trimmed.startsWith('- ')) {
+                    const emoji = trimmed.match(/^([\u{1F000}-\u{1FFFF}]|✅|❌|⚠️|ℹ️)/u);
+                    const text = trimmed.replace(/^.\s*\*\*(.*?):\*\*\s*/, '$1: ').replace(/^[✅❌⚠️ℹ️]\s*/, '');
+                    checksHtml += `<div class="check-item"><span class="detail">${escapeHtml(text)}</span></div>`;
+                }
+
+                if (inRecommendations && /^\d+\.\s/.test(trimmed)) {
+                    const text = trimmed.replace(/^\d+\.\s*/, '');
+                    recommendationsHtml += `<div class="recommendation-item">${escapeHtml(text)}</div>`;
+                }
+            }
+
+            if (!checksHtml) checksHtml = `<div class="check-item"><span class="detail">${escapeHtml(resultText)}</span></div>`;
+
+            resultDiv.innerHTML = `
+                <div class="card">
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="badge ${statusBadgeClass}">${statusLabel}</span>
+                        </div>
+                        <div class="summary-item">
+                            <div class="value" style="color: ${scoreColor}">${score}</div>
+                            <div class="label">Health Score</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="value">${issues}</div>
+                            <div class="label">Issues Found</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="value" style="font-size:14px; word-break:break-all;">${escapeHtml(url)}</div>
+                            <div class="label">Site</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Detailed Checks</h2>
+                    ${checksHtml || '<div class="placeholder">No structured check data available</div>'}
+                </div>
+
+                ${recommendationsHtml ? `
+                <div class="card">
+                    <h2>Recommendations</h2>
+                    ${recommendationsHtml}
+                </div>
+                ` : ''}
+
+                <div class="card">
+                    <h2>Raw Report</h2>
+                    <div class="output-content"><pre>${escapeHtml(resultText)}</pre></div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('result').innerHTML = `
+                <div class="card">
+                    <div class="error">${escapeHtml(message)}</div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
