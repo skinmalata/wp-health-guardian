@@ -6,3 +6,6 @@ __pycache__/
 dist/
 build/
 .venv/
+ABOUT_THE_PROJECT.md
+PROJECT_STORY.md
+YOUTUBE_SCRIPT.txt
