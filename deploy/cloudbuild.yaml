@@ -1,9 +1,17 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app', '-f', 'deploy/Dockerfile', '.']
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app'
+      - '-f'
+      - 'deploy/Dockerfile'
+      - '.'
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app']
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app'
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -11,18 +19,32 @@ steps:
       - 'run'
       - 'deploy'
       - 'wordpress-health-guardian'
-      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app'
-      - '--region=us-central1'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app'
+      - '--region=${_REGION}'
       - '--platform=managed'
       - '--allow-unauthenticated'
-      - '--set-env-vars=GOOGLE_API_KEY=${_GOOGLE_API_KEY}'
-      - '--set-env-vars=DT_ENVIRONMENT=${_DT_ENVIRONMENT}'
-      - '--set-env-vars=DT_PLATFORM_TOKEN=${_DT_PLATFORM_TOKEN}'
+      - '--timeout=300'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID'
+      - '--set-env-vars=GOOGLE_CLOUD_LOCATION=${_REGION}'
+      - '--set-env-vars=FIRESTORE_COLLECTION=health-checks'
+      - '--set-env-vars=SERVICE_URL=https://wordpress-health-guardian-948045128961.us-central1.run.app'
+      - '--set-secrets=DT_ENVIRONMENT=dt-environment:latest'
+      - '--set-secrets=DT_PLATFORM_TOKEN=dt-platform-token:latest'
+      - '--set-secrets=DT_CLASSIC_TOKEN=dt-classic-token:latest'
+      - '--set-secrets=DT_OTEL_TOKEN=dt-otel-token:latest'
+      - '--set-secrets=SCHEDULED_CHECK_SECRET=scheduler-check-secret:latest'
+      # Uncomment below after creating a SendGrid API key secret:
+      # - '--set-secrets=SENDGRID_API_KEY=sendgrid-api-key:latest'
+      # - '--set-env-vars=NOTIFICATION_EMAIL=your-email@example.com'
+      - '--project=$PROJECT_ID'
 
 substitutions:
-  _GOOGLE_API_KEY: ''
-  _DT_ENVIRONMENT: ''
-  _DT_PLATFORM_TOKEN: ''
+  _REGION: us-central1
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/wordpress-health-guardian/app'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -2,16 +2,41 @@ import json
 import datetime
 
 
+def _safe_parse(data):
+    if not isinstance(data, str):
+        return data
+    try:
+        return json.loads(data)
+    except (json.JSONDecodeError, TypeError):
+        pass
+    try:
+        import ast
+        parsed = ast.literal_eval(data)
+        if isinstance(parsed, dict):
+            return parsed
+        return {}
+    except (ValueError, SyntaxError, MemoryError, ImportError):
+        pass
+    return {}
+
+
 def generate_health_report(
     url: str,
-    uptime_data: str,
-    ssl_data: str,
-    wp_data: str,
-    dynatrace_data: str = "",
+    uptime_data: dict,
+    ssl_data: dict,
+    wp_data: dict,
+    dynatrace_data: dict = None,
+    dynatrace_problems: dict = None,
+    dynatrace_entities: dict = None,
+    dynatrace_domain_data: dict = None,
 ) -> dict:
     """Generate a structured health report from all collected data.
 
-    Uses stringified dict data and combines it into a report structure.
+    Pass the raw dict results from check_site_uptime(), check_ssl_certificate(),
+    check_wordpress_specific(), query_dynatrace_problems(), query_dynatrace_entities()
+    directly as arguments. Do NOT stringify them.
+    Pass query_dynatrace_for_domain() result as dynatrace_domain_data for
+    Dynatrace-enhanced analysis specific to the checked domain.
     Returns a report dictionary with findings, recommendations, and severity.
     """
     report = {
@@ -24,22 +49,12 @@ def generate_health_report(
         },
         "checks": [],
         "recommendations": [],
+        "dynatrace_enhanced": False,
     }
 
-    try:
-        up = json.loads(uptime_data) if isinstance(uptime_data, str) else uptime_data
-    except (json.JSONDecodeError, TypeError):
-        up = {}
-
-    try:
-        ssl = json.loads(ssl_data) if isinstance(ssl_data, str) else ssl_data
-    except (json.JSONDecodeError, TypeError):
-        ssl = {}
-
-    try:
-        wp = json.loads(wp_data) if isinstance(wp_data, str) else wp_data
-    except (json.JSONDecodeError, TypeError):
-        wp = {}
+    up = _safe_parse(uptime_data)
+    ssl = _safe_parse(ssl_data)
+    wp = _safe_parse(wp_data)
 
     score = 100
     issues = 0
@@ -126,16 +141,114 @@ def generate_health_report(
             issues += 1
             report["recommendations"].append("WordPress REST API is not accessible. Check permalinks and .htaccess.")
 
-    if dynatrace_data and dynatrace_data != "{}":
-        try:
-            dt = json.loads(dynatrace_data) if isinstance(dynatrace_data, str) else dynatrace_data
+    if dynatrace_data:
+        dt = dynatrace_data
+        report["checks"].append({
+            "category": "Dynatrace Observability",
+            "status": "info",
+            "detail": f"Dynatrace data available: {json.dumps(dt)[:200]}",
+        })
+
+    if dynatrace_problems:
+        probs = dynatrace_problems
+        if probs.get("configured") and not probs.get("error") and probs.get("total_count", 0) > 0:
+            for p in probs.get("problems", []):
+                severity = p.get("severity", "unknown")
+                status = "fail" if severity in ("CRITICAL", "ERROR") else "warn"
+                report["checks"].append({
+                    "category": "Dynatrace Problem",
+                    "status": status,
+                    "detail": f"{p.get('title', 'Unknown')} ({severity})",
+                })
+                issues += 1
+                score -= 10
+                report["recommendations"].append(
+                    f"Fix Dynatrace problem: {p.get('title', 'Unknown')}"
+                )
+        elif probs.get("configured") and not probs.get("error"):
             report["checks"].append({
-                "category": "Dynatrace Observability",
-                "status": "info",
-                "detail": f"Dynatrace data available: {json.dumps(dt)[:200]}",
+                "category": "Dynatrace Problems",
+                "status": "pass",
+                "detail": "No active problems found",
             })
-        except (json.JSONDecodeError, TypeError):
-            pass
+        elif probs.get("configured") and probs.get("error"):
+            detail = probs.get("error", "API unavailable")
+            if "403" in detail:
+                detail = "Dynatrace MCP available (direct API requires classic token)"
+            report["checks"].append({
+                "category": "Dynatrace Problems",
+                "status": "info",
+                "detail": detail,
+            })
+        else:
+            report["checks"].append({
+                "category": "Dynatrace",
+                "status": "info",
+                "detail": probs.get("error", "Not available"),
+            })
+
+    if dynatrace_entities:
+        ents = dynatrace_entities
+        if ents.get("configured") and not ents.get("error") and ents.get("total_count", 0) > 0:
+            report["checks"].append({
+                "category": "Dynatrace Entities",
+                "status": "pass",
+                "detail": f"{ents.get('total_count')} entities monitored",
+            })
+        elif ents.get("configured") and not ents.get("error"):
+            report["checks"].append({
+                "category": "Dynatrace Entities",
+                "status": "info",
+                "detail": "No entities found",
+            })
+        elif ents.get("configured") and ents.get("error"):
+            detail = ents.get("error", "API unavailable")
+            if "403" in detail:
+                detail = "Dynatrace MCP available (direct API requires classic token)"
+            report["checks"].append({
+                "category": "Dynatrace Entities",
+                "status": "info",
+                "detail": detail,
+            })
+
+    if dynatrace_domain_data:
+        dd = dynatrace_domain_data
+        if dd.get("configured") and dd.get("has_monitoring_data"):
+            report["dynatrace_enhanced"] = True
+            for ent in dd.get("entities", []):
+                health = ent.get("health_state", "unknown")
+                status = "pass" if health in ("HEALTHY",) else ("warn" if health in ("UNHEALTHY",) else "info")
+                report["checks"].append({
+                    "category": "Dynatrace Domain Entity",
+                    "status": status,
+                    "detail": f"Entity: {ent.get('name', 'Unknown')} ({ent.get('type', '?')}) — health: {health}",
+                })
+            for prob in dd.get("problems", []):
+                severity = prob.get("severity", "unknown")
+                status = "fail" if severity in ("CRITICAL", "ERROR") else "warn"
+                report["checks"].append({
+                    "category": "Dynatrace Domain Problem",
+                    "status": status,
+                    "detail": f"{prob.get('title', 'Unknown')} ({severity})",
+                })
+                issues += 1
+                score -= 15
+                report["recommendations"].append(
+                    f"Dynatrace detected a {severity.lower()} problem affecting this site: {prob.get('title', 'Unknown')}. "
+                    f"Investigate in Dynatrace for root cause."
+                )
+            if dd.get("problems_found", 0) == 0 and dd.get("entities_found", 0) > 0:
+                report["checks"].append({
+                    "category": "Dynatrace Domain Monitoring",
+                    "status": "pass",
+                    "detail": f"Dynatrace monitors {dd.get('entities_found')} entity(ies) for this domain — no active problems",
+                })
+        elif dd.get("configured") and not dd.get("error"):
+            report["checks"].append({
+                "category": "Dynatrace Domain Lookup",
+                "status": "info",
+                "detail": dd.get("message", "No Dynatrace data for this domain"),
+            })
 
     score = max(0, min(100, score))
     if score >= 80:
@@ -169,6 +282,10 @@ def format_report_for_display(report: dict) -> str:
         f"",
         f"## Checks",
     ]
+    if report.get("dynatrace_enhanced"):
+        lines.append("")
+        lines.append("> 🔭 **Dynatrace Enhanced** — Analysis includes domain-specific Dynatrace monitoring data")
+
     for c in report.get("checks", []):
         emoji = {"pass": "✅", "fail": "❌", "warn": "⚠️", "info": "ℹ️"}.get(
             c.get("status", "info"), "❓"

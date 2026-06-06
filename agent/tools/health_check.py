@@ -47,9 +47,15 @@ def check_ssl_certificate(url_or_hostname: str) -> dict:
             cert["notAfter"], "%b %d %H:%M:%S %Y %Z"
         )
         remaining = (expiry - datetime.datetime.now()).days
+        issuer = {}
+        if cert.get("issuer"):
+            for rdn in cert["issuer"]:
+                for attr in rdn:
+                    if len(attr) >= 2:
+                        issuer[attr[0]] = attr[1]
         return {
             "hostname": hostname,
-            "issuer": dict(x[0] for lst in cert.get("issuer", []) for x in lst) if cert.get("issuer") else {},
+            "issuer": issuer,
             "expiry_date": expiry.isoformat(),
             "days_remaining": remaining,
             "is_expiring_soon": remaining < 30,

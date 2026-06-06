@@ -10,9 +10,17 @@
         .header { background: linear-gradient(135deg, #1e293b, #334155); padding: 30px; text-align: center; border-bottom: 1px solid #475569; }
         .header h1 { font-size: 28px; background: linear-gradient(90deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .header p { color: #94a3b8; margin-top: 8px; font-size: 14px; }
-        .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+        .gcp-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px; background: #1e3a5f; color: #93c5fd; vertical-align: middle; }
+        .container { max-width: 960px; margin: 0 auto; padding: 30px 20px; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; background: #1e293b; border: 1px solid #334155; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 14px; font-weight: 500; color: #94a3b8; transition: all 0.2s; }
+        .tab:hover { background: #334155; color: #e2e8f0; }
+        .tab.active { background: #334155; color: #60a5fa; border-color: #60a5fa; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         .card { background: #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #334155; }
         .card h2 { font-size: 18px; margin-bottom: 16px; color: #f1f5f9; }
+        .card h3 { font-size: 15px; margin: 12px 0 8px; color: #e2e8f0; }
         .input-group { display: flex; gap: 12px; flex-wrap: wrap; }
         .input-group input { flex: 1; min-width: 200px; padding: 12px 16px; background: #0f172a; border: 1px solid #475569; border-radius: 8px; color: #e2e8f0; font-size: 14px; }
         .input-group input:focus { outline: none; border-color: #60a5fa; }
@@ -21,19 +29,18 @@
         .btn { padding: 12px 24px; background: linear-gradient(135deg, #60a5fa, #a78bfa); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
         .btn:hover { opacity: 0.9; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: #475569; }
+        .btn-secondary:hover { background: #64748b; opacity: 1; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; }
         .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 12px; }
         .badge-healthy { background: #065f46; color: #6ee7b7; }
         .badge-warning { background: #78350f; color: #fcd34d; }
         .badge-critical { background: #7f1d1d; color: #fca5a5; }
         .badge-info { background: #1e3a5f; color: #93c5fd; }
         .badge-pending { background: #374151; color: #9ca3af; }
-        .report-section { margin: 16px 0; }
-        .report-section h3 { font-size: 15px; color: #94a3b8; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .check-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 6px 0; background: #0f172a; border-radius: 6px; font-size: 14px; }
-        .check-item .icon { font-size: 16px; }
         .check-item .detail { color: #cbd5e1; flex: 1; }
         .recommendation-item { padding: 10px 12px; margin: 6px 0; background: #0f172a; border-radius: 6px; font-size: 14px; border-left: 3px solid #60a5fa; }
-        .score-ring { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; font-weight: 700; }
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; text-align: center; }
         .summary-item { padding: 16px; background: #0f172a; border-radius: 8px; }
         .summary-item .value { font-size: 24px; font-weight: 700; color: #f1f5f9; }
@@ -53,56 +60,241 @@
         .output-content h1 { font-size: 20px; margin: 16px 0 8px; color: #f1f5f9; }
         .output-content h2 { font-size: 16px; margin: 12px 0 8px; color: #e2e8f0; }
         .output-content strong { color: #f1f5f9; }
-        @media (max-width: 600px) { .input-group { flex-direction: column; } .input-group input { min-width: auto; } }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 10px 12px; color: #94a3b8; font-weight: 600; border-bottom: 1px solid #334155; }
+        td { padding: 10px 12px; border-bottom: 1px solid #1e293b; }
+        tr:hover td { background: #0f172a; }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+        .status-dot.healthy { background: #6ee7b7; }
+        .status-dot.warning { background: #fcd34d; }
+        .status-dot.critical { background: #fca5a5; }
+        .status-dot.unknown { background: #64748b; }
+        .gcp-status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .gcp-service { padding: 12px; background: #0f172a; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+        .gcp-service .name { font-size: 13px; color: #94a3b8; }
+        .gcp-service .status-on { color: #6ee7b7; font-weight: 600; }
+        .gcp-service .status-off { color: #fca5a5; font-weight: 600; }
+        .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+        @media (max-width: 600px) { .input-group { flex-direction: column; } .input-group input { min-width: auto; } .tabs { flex-wrap: wrap; } }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>WordPress Health Guardian</h1>
-        <p>AI-powered WordPress site monitoring & diagnostics agent</p>
+        <h1>WordPress Health Guardian <span class="gcp-badge" id="gcpBadge">GCP</span></h1>
+        <p>AI-powered WordPress site monitoring & diagnostics — powered by Google Cloud & Dynatrace MCP</p>
     </div>
 
     <div class="container">
-        <div class="card">
-            <h2>Check a WordPress Site</h2>
-            <div class="input-group">
-                <input type="url" id="siteUrl" placeholder="https://example.com" value="https://wordpress.org">
-                <button onclick="checkSite()" class="btn" id="checkBtn">Run Health Check</button>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+            <div class="tab" onclick="switchTab('check')">Health Check</div>
+            <div class="tab" onclick="switchTab('history')">History</div>
+            <div class="tab" onclick="switchTab('gcp')">GCP</div>
+            <div class="tab" onclick="switchTab('dt')">Dynatrace</div>
+        </div>
+
+        <div id="tab-dashboard" class="tab-content active">
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                    <h2>Monitored Sites</h2>
+                    <div style="display:flex;gap:8px;">
+                        <input type="url" id="dashboardAddUrl" placeholder="Add site URL..." style="padding:8px 12px;background:#0f172a;border:1px solid #475569;border-radius:6px;color:#e2e8f0;font-size:13px;width:240px;">
+                        <button onclick="addMonitoredSite()" class="btn btn-sm">Add</button>
+                        <button onclick="loadDashboard()" class="btn btn-secondary btn-sm">Refresh</button>
+                    </div>
+                </div>
             </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="useDynatrace">
-                <label for="useDynatrace">Use Dynatrace for deeper observability (requires configured Dynatrace tenant)</label>
-            </div>
-            <div class="example-sites">
-                <span class="example-tag" onclick="setExample('https://wordpress.org')">wordpress.org</span>
-                <span class="example-tag" onclick="setExample('https://www.php.net')">php.net</span>
-                <span class="example-tag" onclick="setExample('https://github.com')">github.com</span>
+            <div id="dashboardGrid">
+                <div class="loading-spinner"><div class="spinner"></div></div>
             </div>
         </div>
 
-        <div id="result"></div>
+        <div id="tab-check" class="tab-content">
+            <div class="card">
+                <h2>Check a WordPress Site</h2>
+                <div class="input-group">
+                    <input type="url" id="siteUrl" placeholder="https://example.com" value="https://wordpress.org">
+                    <button onclick="checkSite()" class="btn" id="checkBtn">Run Health Check</button>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="useDynatrace">
+                    <label for="useDynatrace">Use Dynatrace for deeper observability</label>
+                </div>
+                <div class="action-buttons">
+                    <button onclick="quickCheck()" class="btn btn-secondary btn-sm" id="quickBtn">Quick Check (no AI)</button>
+                </div>
+                <div class="example-sites">
+                    <span class="example-tag" onclick="setExample('https://wordpress.org')">wordpress.org</span>
+                    <span class="example-tag" onclick="setExample('https://www.php.net')">php.net</span>
+                    <span class="example-tag" onclick="setExample('https://github.com')">github.com</span>
+                </div>
+            </div>
+            <div id="result"></div>
+        </div>
+
+        <div id="tab-history" class="tab-content">
+            <div class="card">
+                <h2>Health Check History</h2>
+                <div class="input-group" style="margin-bottom:16px;">
+                    <input type="url" id="historyUrl" placeholder="Filter by URL (optional)" style="flex:1;">
+                    <button onclick="loadHistory()" class="btn btn-secondary btn-sm">Refresh</button>
+                </div>
+                <div id="historyContent">
+                    <div class="placeholder">
+                        <div class="placeholder-icon">📊</div>
+                        <p>No check history yet. Run a health check to see results here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-gcp" class="tab-content">
+            <div class="card">
+                <h2>Google Cloud Configuration</h2>
+                <div id="gcpStatus"><div class="loading-spinner"><div class="spinner"></div></div></div>
+            </div>
+        </div>
+
+        <div id="tab-dt" class="tab-content">
+            <div class="card">
+                <h2>Dynatrace Observability</h2>
+                <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+                    <input type="text" id="dtDomainInput" placeholder="Look up domain (e.g. wordpress.org)" style="flex:1;min-width:200px;padding:10px 14px;background:#0f172a;border:1px solid #475569;border-radius:8px;color:#e2e8f0;font-size:14px;">
+                    <button onclick="loadDtDomain()" class="btn btn-secondary btn-sm">Look Up Domain</button>
+                    <button onclick="loadDtStatus()" class="btn btn-secondary btn-sm">Tenant Overview</button>
+                </div>
+                <div id="dtStatus"><div class="loading-spinner"><div class="spinner"></div></div></div>
+            </div>
+        </div>
     </div>
 
-    <div class="footer">Built with Google ADK, Gemini, and Dynatrace MCP for the Google Cloud Rapid Agent Hackathon</div>
+    <!-- Detail Modal Overlay -->
+    <div id="detailOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;" onclick="if(event.target===this)closeDetail()">
+        <div style="background:#1e293b;border-radius:12px;padding:24px;max-width:640px;width:90%;max-height:80vh;overflow-y:auto;border:1px solid #475569;position:relative;">
+            <button onclick="closeDetail()" style="position:absolute;top:12px;right:12px;background:none;border:1px solid #475569;color:#94a3b8;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:14px;">✕</button>
+            <h2 style="margin-bottom:16px;font-size:18px;">Check Detail</h2>
+            <div id="detailBody"></div>
+        </div>
+    </div>
+
+    <div class="footer">Built with Google ADK, Gemini, Vertex AI, Firestore, and Dynatrace MCP — Google Cloud Rapid Agent Hackathon</div>
 
     <script>
+        // === Tab switching ===
+        function switchTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`.tab[onclick*="${name}"]`).classList.add('active');
+            document.getElementById(`tab-${name}`).classList.add('active');
+            if (name === 'dashboard') loadDashboard();
+            if (name === 'history') loadHistory();
+            if (name === 'gcp') loadGcpStatus();
+            if (name === 'dt') loadDtStatus();
+        }
+
+        // === Dashboard ===
+        async function loadDashboard() {
+            const grid = document.getElementById('dashboardGrid');
+            try {
+                const r = await fetch('/api/dashboard');
+                const data = await r.json();
+                if (!data.sites || data.sites.length === 0) {
+                    grid.innerHTML = '<div class="card"><div class="placeholder"><div class="placeholder-icon">📋</div><p>No sites being monitored. Add a URL above to get started.</p></div></div>';
+                    return;
+                }
+                const latestMap = {};
+                (data.latest || []).forEach(c => { latestMap[c.site_url] = c; });
+                let cards = '';
+                for (const site of data.sites) {
+                    const latest = latestMap[site.url];
+                    const status = latest ? (latest.status || 'unknown') : 'unknown';
+                    const score = latest ? (latest.score || 0) : 0;
+                    const issues = latest ? (latest.issues_found || 0) : 0;
+                    const ts = latest ? ((latest.timestamp||'').substring(0,19) || 'Never') : 'Never';
+                    const statusBadge = {healthy:'badge-healthy',warning:'badge-warning',critical:'badge-critical',unknown:'badge-pending'}[status] || 'badge-pending';
+                    const scoreColor = score >= 80 ? '#6ee7b7' : score >= 50 ? '#fcd34d' : '#fca5a5';
+                    cards += `
+                        <div class="card" style="position:relative;">
+                            <button onclick="removeMonitoredSite('${escapeHtml(site.id)}')" style="position:absolute;top:12px;right:12px;background:none;border:1px solid #475569;color:#fca5a5;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;">Remove</button>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                <div>
+                                    <div class="badge ${statusBadge}">${status.toUpperCase()}</div>
+                                    <p style="font-size:13px;margin-top:8px;word-break:break-all;"><a href="${escapeHtml(site.url)}" target="_blank" style="color:#60a5fa;">${escapeHtml(site.url)}</a></p>
+                                    <p style="font-size:12px;color:#64748b;margin-top:4px;">Last checked: ${ts}</p>
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center;">
+                                    <div style="background:#0f172a;padding:12px;border-radius:8px;"><div style="font-size:22px;font-weight:700;color:${scoreColor}">${score}</div><div style="font-size:11px;color:#64748b;">Score</div></div>
+                                    <div style="background:#0f172a;padding:12px;border-radius:8px;"><div style="font-size:22px;font-weight:700;color:#f1f5f9;">${issues}</div><div style="font-size:11px;color:#64748b;">Issues</div></div>
+                                </div>
+                            </div>
+                            <div style="margin-top:12px;display:flex;gap:8px;">
+                                <button onclick="setExample('${escapeHtml(site.url)}');switchTab('check')" class="btn btn-secondary btn-sm">Check Now</button>
+                                <button onclick="quickCheckUrl('${escapeHtml(site.url)}')" class="btn btn-secondary btn-sm">Quick Check</button>
+                            </div>
+                        </div>`;
+                }
+                grid.innerHTML = cards;
+            } catch (err) {
+                grid.innerHTML = `<div class="card"><div class="error">Failed to load dashboard: ${escapeHtml(err.message)}</div></div>`;
+            }
+        }
+
+        async function addMonitoredSite() {
+            const input = document.getElementById('dashboardAddUrl');
+            const url = input.value.trim();
+            if (!url) return;
+            const r = await fetch(`/api/monitored-sites?url=${encodeURIComponent(url)}`, { method: 'POST' });
+            const data = await r.json();
+            input.value = '';
+            loadDashboard();
+        }
+
+        async function removeMonitoredSite(id) {
+            await fetch(`/api/monitored-sites/${id}`, { method: 'DELETE' });
+            loadDashboard();
+        }
+
+        async function quickCheckUrl(url) {
+            switchTab('check');
+            document.getElementById('siteUrl').value = url;
+            quickCheck();
+        }
+
         function setExample(url) {
             document.getElementById('siteUrl').value = url;
         }
 
+        // === GCP Badge ===
+        (async function initBadge() {
+            try {
+                const r = await fetch('/api/gcp-config');
+                const cfg = await r.json();
+                const badge = document.getElementById('gcpBadge');
+                if (cfg.running_on_gcp) {
+                    badge.textContent = 'Cloud Run';
+                    badge.style.background = '#065f46';
+                    badge.style.color = '#6ee7b7';
+                } else if (cfg.project_id && cfg.project_id !== 'not set') {
+                    badge.textContent = 'GCP Configured';
+                    badge.style.background = '#1e3a5f';
+                    badge.style.color = '#93c5fd';
+                } else {
+                    badge.textContent = 'Local Dev';
+                    badge.style.background = '#374151';
+                    badge.style.color = '#9ca3af';
+                }
+            } catch (_) {}
+        })();
+
+        // === Full health check (ADK agent) ===
         async function checkSite() {
             const url = document.getElementById('siteUrl').value.trim();
             const useDynatrace = document.getElementById('useDynatrace').checked;
             const btn = document.getElementById('checkBtn');
-
-            if (!url) {
-                showError('Please enter a URL');
-                return;
-            }
+            if (!url) { showError('Please enter a URL'); return; }
 
             btn.disabled = true;
             btn.textContent = 'Running health check...';
-
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = `
                 <div class="card">
@@ -113,19 +305,12 @@
                     </div>
                 </div>
             `;
-
             try {
                 const params = new URLSearchParams({ url, use_dynatrace: useDynatrace });
                 const response = await fetch(`/api/check?${params}`);
                 const data = await response.json();
-
-                if (data.error) {
-                    showError(data.error);
-                    return;
-                }
-
+                if (data.error) { showError(data.error); return; }
                 renderResult(url, data.result);
-
             } catch (err) {
                 showError('Failed to connect to the server: ' + err.message);
             } finally {
@@ -134,102 +319,355 @@
             }
         }
 
-        function renderResult(url, resultText) {
+        // === Quick check (direct, no AI) ===
+        async function quickCheck() {
+            const url = document.getElementById('siteUrl').value.trim();
+            const btn = document.getElementById('quickBtn');
+            if (!url) { showError('Please enter a URL'); return; }
+
+            btn.disabled = true;
+            btn.textContent = 'Running...';
             const resultDiv = document.getElementById('result');
-
-            const statusMatch = resultText.match(/\*\*Status:\*\*\s*(\w+)/i);
-            const scoreMatch = resultText.match(/\*\*Health Score:\*\*\s*(\d+)/);
-            const issuesMatch = resultText.match(/\*\*Issues Found:\*\*\s*(\d+)/);
-
-            const status = statusMatch ? statusMatch[1].toLowerCase() : 'unknown';
-            const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
-            const issues = issuesMatch ? parseInt(issuesMatch[1]) : 0;
-
-            const statusBadgeClass = {
-                healthy: 'badge-healthy',
-                warning: 'badge-warning',
-                critical: 'badge-critical',
-            }[status] || 'badge-info';
-
-            const statusLabel = status.toUpperCase();
-
-            const scoreColor = score >= 80 ? '#6ee7b7' : score >= 50 ? '#fcd34d' : '#fca5a5';
-            const scoreBorder = score >= 80 ? '#065f46' : score >= 50 ? '#78350f' : '#7f1d1d';
-
-            const lines = resultText.split('\n');
-            let checksHtml = '';
-            let recommendationsHtml = '';
-            let inChecks = false;
-            let inRecommendations = false;
-
-            for (const line of lines) {
-                const trimmed = line.trim();
-
-                if (trimmed === '## Checks') { inChecks = true; inRecommendations = false; continue; }
-                if (trimmed === '## Recommendations') { inChecks = false; inRecommendations = true; continue; }
-                if (trimmed.startsWith('## ')) { inChecks = false; inRecommendations = false; }
-                if (trimmed.startsWith('# ') || trimmed.startsWith('**') || trimmed === '' || trimmed.startsWith('- **')) continue;
-
-                if (inChecks && trimmed.startsWith('- ')) {
-                    const emoji = trimmed.match(/^([\u{1F000}-\u{1FFFF}]|✅|❌|⚠️|ℹ️)/u);
-                    const text = trimmed.replace(/^.\s*\*\*(.*?):\*\*\s*/, '$1: ').replace(/^[✅❌⚠️ℹ️]\s*/, '');
-                    checksHtml += `<div class="check-item"><span class="detail">${escapeHtml(text)}</span></div>`;
-                }
-
-                if (inRecommendations && /^\d+\.\s/.test(trimmed)) {
-                    const text = trimmed.replace(/^\d+\.\s*/, '');
-                    recommendationsHtml += `<div class="recommendation-item">${escapeHtml(text)}</div>`;
-                }
+            resultDiv.innerHTML = `
+                <div class="card">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Running quick check on <strong>${escapeHtml(url)}</strong>...</p>
+                    </div>
+                </div>
+            `;
+            try {
+                const r = await fetch(`/api/quick-check?url=${encodeURIComponent(url)}`);
+                const data = await r.json();
+                if (data.error) { showError(data.error); return; }
+                renderQuickResult(url, data);
+            } catch (err) {
+                showError('Failed: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Quick Check (no AI)';
             }
+        }
 
-            if (!checksHtml) checksHtml = `<div class="check-item"><span class="detail">${escapeHtml(resultText)}</span></div>`;
+        function renderQuickResult(url, report) {
+            const s = report.summary || {};
+            const resultDiv = document.getElementById('result');
+            const statusClass = s.status === 'healthy' ? 'badge-healthy' : s.status === 'warning' ? 'badge-warning' : 'badge-critical';
+            const scoreColor = s.score >= 80 ? '#6ee7b7' : s.score >= 50 ? '#fcd34d' : '#fca5a5';
+            let checksHtml = (report.checks || []).map(c =>
+                `<div class="check-item"><span class="detail"><strong>${escapeHtml(c.category)}:</strong> ${escapeHtml(c.detail)}</span></div>`
+            ).join('');
+            let recsHtml = (report.recommendations || []).map(r =>
+                `<div class="recommendation-item">${escapeHtml(r)}</div>`
+            ).join('');
+            let storageBadge = report.stored_in_firestore
+                ? '<span class="badge badge-info">Saved to Firestore</span>'
+                : '';
+            let dtBadge = report.dynatrace_enhanced
+                ? '<span class="badge" style="background:#1e3a5f;color:#93c5fd;">Dynatrace Enhanced</span>'
+                : '';
 
             resultDiv.innerHTML = `
                 <div class="card">
+                    ${storageBadge} ${dtBadge}
                     <div class="summary-grid">
-                        <div class="summary-item">
-                            <span class="badge ${statusBadgeClass}">${statusLabel}</span>
-                        </div>
-                        <div class="summary-item">
-                            <div class="value" style="color: ${scoreColor}">${score}</div>
-                            <div class="label">Health Score</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="value">${issues}</div>
-                            <div class="label">Issues Found</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="value" style="font-size:14px; word-break:break-all;">${escapeHtml(url)}</div>
-                            <div class="label">Site</div>
-                        </div>
+                        <div class="summary-item"><span class="badge ${statusClass}">${(s.status||'unknown').toUpperCase()}</span></div>
+                        <div class="summary-item"><div class="value" style="color:${scoreColor}">${s.score||0}</div><div class="label">Health Score</div></div>
+                        <div class="summary-item"><div class="value">${s.issues_found||0}</div><div class="label">Issues Found</div></div>
+                        <div class="summary-item"><div class="value" style="font-size:14px;word-break:break-all;">${escapeHtml(url)}</div><div class="label">Site</div></div>
                     </div>
                 </div>
+                <div class="card"><h2>Checks</h2>${checksHtml || '<div class="placeholder">No check data</div>'}</div>
+                ${recsHtml ? `<div class="card"><h2>Recommendations</h2>${recsHtml}</div>` : ''}
+            `;
+        }
 
-                <div class="card">
-                    <h2>Detailed Checks</h2>
-                    ${checksHtml || '<div class="placeholder">No structured check data available</div>'}
+        function renderMarkdown(text) {
+            let html = escapeHtml(text);
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/^[\*\-]\s+(.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+            html = html.replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>');
+            html = html.replace(/<li>.*?<li>/gs, function(m) { return m.replace(/<\/li>\s*<li>/g, '<li>'); });
+            html = html.replace(/(<li>.*<\/li>\n?)+/g, function(m) {
+                const items = m.match(/<li>.*?<\/li>/g) || [];
+                return '<ol>' + items.join('') + '</ol>';
+            });
+            html = html.replace(/\n{2,}/g, '</p><p>');
+            html = '<p>' + html + '</p>';
+            html = html.replace(/<p><\/p>/g, '');
+            html = html.replace(/<li><\/li>/g, '');
+            html = html.replace(/<\/ul>\s*<ul>/g, '');
+            html = html.replace(/<\/ol>\s*<ol>/g, '');
+            return html;
+        }
+
+        // === Render full ADK agent result ===
+        function renderResult(url, resultText) {
+            const resultDiv = document.getElementById('result');
+            const textLower = resultText.toLowerCase();
+            let status = 'unknown';
+            if (/\*\*status:\*\*/i.test(resultText)) {
+                const m = resultText.match(/\*\*status:\*\*\s*([^\n]+)/i);
+                if (m) {
+                    const s = m[1].toLowerCase().replace(/[✅❌⚠️ℹ️]\s*/g, '').trim();
+                    if (/healthy|up/.test(s)) status = 'healthy';
+                    else if (/warning|warn/.test(s)) status = 'warning';
+                    else if (/critical|fail|down/.test(s)) status = 'critical';
+                }
+            } else if (/appears\s+(healthy|warning|critical)/i.test(textLower)) {
+                const m = textLower.match(/appears\s+(healthy|warning|critical)/i);
+                if (m) status = m[1];
+            } else if (/summary.*?healthy|site.*healthy|overall.*healthy/i.test(textLower)) {
+                status = 'healthy';
+            }
+            const scoreMatch = resultText.match(/\*\*health score:\*\*\s*(\d+)/i);
+            const score = scoreMatch ? parseInt(scoreMatch[1]) : null;
+            const issuesMatch = resultText.match(/\*\*issues found:\*\*\s*(\d+)/i);
+            const issues = issuesMatch ? parseInt(issuesMatch[1]) : null;
+            const statusBadgeClass = { healthy: 'badge-healthy', warning: 'badge-warning', critical: 'badge-critical' }[status] || 'badge-info';
+            const scoreColor = score >= 80 ? '#6ee7b7' : score >= 50 ? '#fcd34d' : '#fca5a5';
+
+            const renderedBody = renderMarkdown(resultText);
+            const scoreHtml = score !== null ? `<div class="value" style="color:${scoreColor}">${score}</div>` : `<div class="value" style="color:#94a3b8;">N/A</div>`;
+            const issuesHtml = issues !== null ? `<div class="value">${issues}</div>` : `<div class="value" style="color:#94a3b8;">N/A</div>`;
+            const hasDtEnhance = resultText.includes('Dynatrace Enhanced');
+            const dtBadge = hasDtEnhance ? '<span class="badge" style="background:#1e3a5f;color:#93c5fd;">Dynatrace Enhanced</span>' : '';
+            resultDiv.innerHTML = `
+                <div class="card report-summary">
+                    ${dtBadge}
+                    <div class="summary-grid">
+                        <div class="summary-item"><span class="badge ${statusBadgeClass}">${status.toUpperCase()}</span></div>
+                        <div class="summary-item">${scoreHtml}<div class="label">Health Score</div></div>
+                        <div class="summary-item">${issuesHtml}<div class="label">Issues Found</div></div>
+                        <div class="summary-item"><div class="value" style="font-size:14px;word-break:break-all;">${escapeHtml(url)}</div><div class="label">Site</div></div>
+                    </div>
                 </div>
-
-                ${recommendationsHtml ? `
-                <div class="card">
-                    <h2>Recommendations</h2>
-                    ${recommendationsHtml}
-                </div>
-                ` : ''}
-
-                <div class="card">
-                    <h2>Raw Report</h2>
-                    <div class="output-content"><pre>${escapeHtml(resultText)}</pre></div>
+                <div class="card report-body">
+                    ${renderedBody}
                 </div>
             `;
         }
 
+        // === History ===
+        async function loadHistory() {
+            const container = document.getElementById('historyContent');
+            container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            try {
+                const filterUrl = document.getElementById('historyUrl').value.trim();
+                let url = '/api/recent?limit=20';
+                if (filterUrl) url = `/api/history?site_url=${encodeURIComponent(filterUrl)}&limit=20`;
+                const r = await fetch(url);
+                const data = await r.json();
+                if (!data.results || data.results.length === 0) {
+                    container.innerHTML = '<div class="placeholder"><div class="placeholder-icon">📊</div><p>No check history found.</p></div>';
+                    return;
+                }
+                let rows = data.results.map(h => {
+                    const cls = h.status || 'unknown';
+                    return `<tr onclick="showHistoryDetail('${escapeHtml(h.id)}')" style="cursor:pointer;">
+                        <td><span class="status-dot ${cls}"></span>${escapeHtml(h.status||'unknown').toUpperCase()}</td>
+                        <td>${h.score||0}</td>
+                        <td style="word-break:break-all;">${escapeHtml(h.site_url||'')}</td>
+                        <td>${escapeHtml((h.timestamp||'').substring(0,19)||'')}</td>
+                        <td>${h.issues_found||0}</td>
+                    </tr>`;
+                }).join('');
+                container.innerHTML = `
+                    <p style="font-size:13px;color:#64748b;margin-bottom:12px;">${data.count} check(s) found</p>
+                    <table>
+                        <thead><tr><th>Status</th><th>Score</th><th>Site</th><th>Date</th><th>Issues</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Failed to load history: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        function showHistoryDetail(id) {
+            const overlay = document.getElementById('detailOverlay');
+            const body = document.getElementById('detailBody');
+            overlay.style.display = 'flex';
+            body.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            fetch(`/api/check-detail/${encodeURIComponent(id)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) { body.innerHTML = `<div class="error">${escapeHtml(data.error)}</div>`; return; }
+                    const status = data.status || 'unknown';
+                    const score = data.score || 0;
+                    const issues = data.issues_found || 0;
+                    const statusClass = status === 'healthy' ? 'badge-healthy' : status === 'warning' ? 'badge-warning' : status === 'critical' ? 'badge-critical' : 'badge-pending';
+                    const scoreColor = score >= 80 ? '#6ee7b7' : score >= 50 ? '#fcd34d' : '#fca5a5';
+                    let checksHtml = (data.checks || []).map(c =>
+                        `<div class="check-item"><span class="detail"><strong>${escapeHtml(c.category||'')}:</strong> ${escapeHtml(c.detail||'')}</span></div>`
+                    ).join('');
+                    let recsHtml = (data.recommendations || []).map(r =>
+                        `<div class="recommendation-item">${escapeHtml(r)}</div>`
+                    ).join('');
+                    body.innerHTML = `
+                        <div class="summary-grid" style="margin-bottom:16px;">
+                            <div class="summary-item"><span class="badge ${statusClass}">${escapeHtml(status.toUpperCase())}</span></div>
+                            <div class="summary-item"><div class="value" style="color:${scoreColor}">${score}</div><div class="label">Health Score</div></div>
+                            <div class="summary-item"><div class="value">${issues}</div><div class="label">Issues Found</div></div>
+                            <div class="summary-item"><div class="value" style="font-size:14px;word-break:break-all;">${escapeHtml(data.site_url||'')}</div><div class="label">Site</div></div>
+                        </div>
+                        <div style="font-size:12px;color:#64748b;margin-bottom:16px;">Checked: ${escapeHtml((data.timestamp||'').substring(0,19)||'N/A')} &middot; Document ID: ${escapeHtml(id)}</div>
+                        <h3>Checks</h3>
+                        ${checksHtml || '<p style="color:#64748b;">No check data</p>'}
+                        ${recsHtml ? `<h3 style="margin-top:16px;">Recommendations</h3>${recsHtml}` : ''}
+                    `;
+                })
+                .catch(err => {
+                    body.innerHTML = `<div class="error">Failed to load detail: ${escapeHtml(err.message)}</div>`;
+                });
+        }
+
+        function closeDetail() {
+            document.getElementById('detailOverlay').style.display = 'none';
+        }
+
+        // === GCP Status ===
+        async function loadGcpStatus() {
+            const container = document.getElementById('gcpStatus');
+            try {
+                const r = await fetch('/api/gcp-config');
+                const cfg = await r.json();
+                const svc = cfg.services_available || {};
+                const svcHtml = Object.entries(svc).map(([name, on]) =>
+                    `<div class="gcp-service"><span class="name">${name}</span><span class="${on ? 'status-on' : 'status-off'}">${on ? '✓ Available' : '— Not configured'}</span></div>`
+                ).join('');
+                container.innerHTML = `
+                    <div class="gcp-status-grid">
+                        <div class="summary-item"><div class="value" style="font-size:16px;">${cfg.project_id}</div><div class="label">Project ID</div></div>
+                        <div class="summary-item"><div class="value" style="font-size:16px;">${cfg.backend_mode}</div><div class="label">AI Backend</div></div>
+                        <div class="summary-item"><div class="value" style="font-size:16px;">${cfg.running_on_gcp ? 'Yes' : 'No'}</div><div class="label">Running on Cloud Run</div></div>
+                    </div>
+                    <h3>Available Services</h3>
+                    <div class="gcp-status-grid">${svcHtml}</div>
+                    <p style="margin-top:16px;font-size:13px;color:#64748b;">${cfg.message}</p>
+                `;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Failed to load GCP status: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        // === Dynatrace Domain Lookup ===
+        async function loadDtDomain() {
+            const container = document.getElementById('dtStatus');
+            const domain = document.getElementById('dtDomainInput').value.trim();
+            if (!domain) { loadDtStatus(); return; }
+            container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Looking up <strong>' + escapeHtml(domain) + '</strong> in Dynatrace...</p></div>';
+            try {
+                const r = await fetch(`/api/dynatrace?domain=${encodeURIComponent(domain)}`);
+                const data = await r.json();
+                if (!data.configured) {
+                    container.innerHTML = '<div class="placeholder"><div class="placeholder-icon">🔌</div><p>Dynatrace not configured.</p></div>';
+                    return;
+                }
+                renderDtDomainResult(container, data, domain);
+            } catch (err) {
+                container.innerHTML = `<div class="error">Failed: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        function renderDtDomainResult(container, data, domain) {
+            const dd = data.domain_data || {};
+            const hasData = dd.has_monitoring_data;
+            const hasProblems = dd.has_related_problems;
+            let html = `<div class="summary-grid">
+                <div class="summary-item"><div class="value" style="font-size:16px;">${escapeHtml(dd.domain || domain)}</div><div class="label">Domain</div></div>
+                <div class="summary-item"><div class="value" style="color:${hasData ? '#6ee7b7' : '#94a3b8'};">${hasData ? 'Monitored' : 'Not found'}</div><div class="label">Dynatrace Status</div></div>
+                <div class="summary-item"><div class="value">${dd.entities_found || 0}</div><div class="label">Related Entities</div></div>
+                <div class="summary-item"><div class="value" style="color:${hasProblems ? '#fca5a5' : '#6ee7b7'};">${dd.problems_found || 0}</div><div class="label">Related Problems</div></div>
+            </div>`;
+
+            if (dd.entities && dd.entities.length > 0) {
+                html += '<h3>Matched Entities</h3>';
+                html += dd.entities.map(e =>
+                    `<div class="check-item"><span class="detail"><strong>${escapeHtml(e.name||'')}</strong> (${escapeHtml(e.type||'')}) — health: ${escapeHtml(e.health_state||'unknown')}</span></div>`
+                ).join('');
+            }
+
+            if (dd.problems && dd.problems.length > 0) {
+                html += '<h3>Related Problems</h3>';
+                html += dd.problems.map(p =>
+                    `<div class="recommendation-item">
+                        <strong>${escapeHtml(p.severity||'')}:</strong> ${escapeHtml(p.title||'')}
+                        <span style="font-size:11px;color:#64748b;display:block;">ID: ${escapeHtml(p.id||'')} &middot; Impact: ${escapeHtml(p.impact||'')}</span>
+                    </div>`
+                ).join('');
+            }
+
+            if (!hasData && !dd.error) {
+                html += '<div class="placeholder" style="margin-top:16px;"><p>No Dynatrace monitoring data found for this domain.</p></div>';
+            } else if (dd.error) {
+                html += `<div class="error">${escapeHtml(dd.error)}</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // === Dynatrace Status ===
+        async function loadDtStatus() {
+            const container = document.getElementById('dtStatus');
+            try {
+                const r = await fetch('/api/dynatrace');
+                const data = await r.json();
+                if (!data.configured) {
+                    container.innerHTML = '<div class="placeholder"><div class="placeholder-icon">🔌</div><p>Dynatrace not configured.</p><p style="font-size:13px;color:#64748b;margin-top:8px;">Set DT_ENVIRONMENT and DT_PLATFORM_TOKEN to enable observability integration.</p></div>';
+                    return;
+                }
+                const problems = data.problems || {};
+                const entities = data.entities || {};
+                let problemsHtml = problems.problems && problems.problems.length > 0
+                    ? problems.problems.map(p =>
+                        `<div class="recommendation-item">
+                            <strong>${escapeHtml(p.severity||'')}:</strong> ${escapeHtml(p.title||'')}
+                            <span style="font-size:11px;color:#64748b;display:block;">ID: ${escapeHtml(p.id||'')} &middot; Impact: ${escapeHtml(p.impact||'')}</span>
+                        </div>`
+                      ).join('')
+                    : '<p style="color:#6ee7b7;">No active problems</p>';
+                let entitiesHtml = entities.entities && entities.entities.length > 0
+                    ? entities.entities.map(e => `<div class="check-item"><span class="detail"><strong>${escapeHtml(e.name||'')}</strong> (${escapeHtml(e.type||'')})</span></div>`).join('')
+                    : '<p style="color:#64748b;">No entities found</p>';
+                const davisHtml = (data.davis && data.davis.length > 0)
+                    ? data.davis.map(d => d.error ? ''
+                        : `<div class="recommendation-item">
+                            <strong>${escapeHtml(d.severity||'')}:</strong> ${escapeHtml(d.title||'')}
+                            <span style="font-size:12px;color:#94a3b8;display:block;margin-top:4px;">
+                                Root cause: ${escapeHtml(d.root_cause||'N/A')} &middot;
+                                Evidence: ${d.evidence_count||0} events &middot;
+                                Affected: ${(d.affected_entities||[]).length} entities
+                            </span>
+                          </div>`
+                      ).join('')
+                    : '';
+                container.innerHTML = `
+                    <div class="summary-grid">
+                        <div class="summary-item"><div class="value" style="font-size:14px;">${escapeHtml(data.config.dt_environment||'')}</div><div class="label">Environment</div></div>
+                        <div class="summary-item"><div class="value" style="color:#6ee7b7;">Connected</div><div class="label">Status</div></div>
+                        <div class="summary-item"><div class="value">${problems.total_count||0}</div><div class="label">Active Problems</div></div>
+                        <div class="summary-item"><div class="value">${entities.total_count||0}</div><div class="label">Monitored Entities</div></div>
+                    </div>
+                    <h3>Active Problems</h3>
+                    ${problemsHtml}
+                    ${davisHtml ? `<h3>Davis AI Root Cause Analysis</h3>${davisHtml}` : ''}
+                    <h3>Monitored Entities</h3>
+                    ${entitiesHtml}
+                `;
+            } catch (err) {
+                container.innerHTML = `<div class="error">Failed to load Dynatrace status: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        // === Shared helpers ===
         function showError(message) {
-            document.getElementById('result').innerHTML = `
-                <div class="card">
-                    <div class="error">${escapeHtml(message)}</div>
-                </div>
-            `;
+            document.getElementById('result').innerHTML = `<div class="card"><div class="error">${escapeHtml(message)}</div></div>`;
         }
 
         function escapeHtml(text) {
