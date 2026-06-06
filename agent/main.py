@@ -81,13 +81,18 @@ def create_health_guardian_agent() -> Agent:
     if dynatrace_toolset:
         tools.append(dynatrace_toolset)
 
-    project = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-    model_name = "gemini-2.5-flash" if project else "gemini-2.0-flash"
+    from agent.tools.gcp_setup import get_backend_mode
 
-    if project:
-        model = VertexAIGemini(model=model_name)
+    mode = get_backend_mode()
+    if mode == "vertex_ai":
+        model = VertexAIGemini(model="gemini-2.5-flash")
+        model_name = "gemini-2.5-flash (Vertex AI)"
+    elif mode == "gemini_api":
+        model = "gemini-2.0-flash"
+        model_name = "gemini-2.0-flash (Gemini API)"
     else:
-        model = model_name
+        model = "gemini-2.0-flash"
+        model_name = "gemini-2.0-flash"
 
     agent = Agent(
         name="wordpress_health_guardian",

@@ -220,7 +220,7 @@ async def check_site(
 
         if not result:
             result = format_report_for_display(report)
-            result += "\n\n> ⚠️ AI agent was unavailable (rate limit reached). Results from direct health check shown above."
+            result += "\n\n> ⚠️ AI agent analysis was unavailable (check Gemini API key, Vertex AI auth, or quota). Results from direct health check shown above."
 
         await save_health_check(report)
         send_health_alert(report)

@@ -23,12 +23,27 @@ def get_cloud_run_url() -> str:
     return os.environ.get("CLOUD_RUN_SERVICE_URL", "")
 
 
+def _can_use_vertex_ai() -> bool:
+    """Check if Vertex AI credentials are actually available."""
+    # Running on Cloud Run / GCE → metadata server provides creds
+    if os.environ.get("K_SERVICE"):
+        return True
+    # Explicit service account file
+    if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
+        return True
+    return False
+
+
 def get_backend_mode() -> str:
-    """Returns 'vertex_ai' if GCP is configured, else 'gemini_api'."""
-    if get_project_id():
+    """Returns 'vertex_ai', 'gemini_api', or 'none' based on available credentials."""
+    api_key = os.environ.get("GOOGLE_API_KEY", "")
+
+    if _can_use_vertex_ai():
         return "vertex_ai"
-    if os.environ.get("GOOGLE_API_KEY"):
+
+    if api_key:
         return "gemini_api"
+
     return "none"
 
 
