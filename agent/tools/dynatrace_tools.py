@@ -73,6 +73,17 @@ def _has_classic_api() -> bool:
     return bool(os.environ.get("DT_CLASSIC_TOKEN", "").strip())
 
 
+def _check_tenant_resolved(resp, token_label: str) -> str | None:
+    """Return a clean error message if the API response indicates an unresolvable tenant."""
+    if resp.status_code == 404 and "failed to resolve tenant" in resp.text:
+        return (
+            f"Dynatrace API returned 404: tenant not found. "
+            f"The {token_label} may not have access to this environment, "
+            f"or the DT_ENVIRONMENT URL may be incorrect."
+        )
+    return None
+
+
 def query_dynatrace_problems(status: str = "OPEN") -> dict:
     dt_env = os.environ.get("DT_ENVIRONMENT", "").strip()
     dt_token = _get_dt_token()
@@ -104,6 +115,9 @@ def query_dynatrace_problems(status: str = "OPEN") -> dict:
                     for p in problems[:5]
                 ],
             }
+        tenant_err = _check_tenant_resolved(resp, "classic API token")
+        if tenant_err:
+            return {"configured": True, "error": tenant_err}
         return {
             "configured": True,
             "error": f"Dynatrace API returned {resp.status_code}: {resp.text[:200]}",
@@ -145,6 +159,9 @@ def query_dynatrace_entities(entity_type: str = None, limit: int = 10) -> dict:
                     for e in entities[:limit]
                 ],
             }
+        tenant_err = _check_tenant_resolved(resp, "classic API token")
+        if tenant_err:
+            return {"configured": True, "error": tenant_err}
         return {
             "configured": True,
             "error": f"Dynatrace API returned {resp.status_code}: {resp.text[:200]}",
@@ -339,6 +356,9 @@ def query_dynatrace_davis_analysis(problem_id: str) -> dict:
                 "start_time": data.get("startTime"),
                 "end_time": data.get("endTime"),
             }
+        tenant_err = _check_tenant_resolved(resp, "classic API token")
+        if tenant_err:
+            return {"configured": True, "error": tenant_err}
         return {
             "configured": True,
             "error": f"Dynatrace API returned {resp.status_code}: {resp.text[:200]}",
