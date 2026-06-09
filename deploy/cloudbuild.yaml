@@ -32,7 +32,6 @@ steps:
       - '--set-env-vars=SERVICE_URL=https://wordpress-health-guardian-948045128961.us-central1.run.app'
       - '--set-secrets=DT_ENVIRONMENT=dt-environment:latest'
       - '--set-secrets=DT_PLATFORM_TOKEN=dt-platform-token:latest'
-      - '--set-secrets=DT_CLASSIC_TOKEN=dt-classic-token:latest'
       - '--set-secrets=DT_OTEL_TOKEN=dt-otel-token:latest'
       - '--set-secrets=SCHEDULED_CHECK_SECRET=scheduler-check-secret:latest'
       # Uncomment below after creating a SendGrid API key secret:
