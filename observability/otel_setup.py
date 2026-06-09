@@ -11,8 +11,6 @@ def _normalize_dt_url(raw: str) -> str:
     for prefix in ("https://", "http://"):
         if raw.startswith(prefix):
             raw = raw.removeprefix(prefix)
-    if "apps.dynatrace.com" in raw:
-        raw = raw.replace("apps.dynatrace.com", "live.dynatrace.com")
     if ".dynatrace.com" not in raw:
         raw = f"{raw}.live.dynatrace.com"
     return raw
