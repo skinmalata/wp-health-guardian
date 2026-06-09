@@ -47,38 +47,39 @@ def check_dynatrace_config() -> dict:
     dt_token = os.environ.get("DT_PLATFORM_TOKEN", "").strip()
     configured = bool(dt_env and dt_token)
     display = ""
+    extra = ""
     if configured:
         base = _normalize_dt_url(dt_env)
         display = base[:30] + "..." if len(base) > 30 else base
+        if not _has_classic_api():
+            extra = " (set DT_CLASSIC_TOKEN for direct API access)"
     return {
         "configured": configured,
         "dt_environment": display or dt_env[:30],
-        "message": "Dynatrace is configured and ready" if configured
+        "has_classic_api": _has_classic_api(),
+        "message": f"Dynatrace is configured and ready{extra}" if configured
         else "Dynatrace not configured. Set DT_ENVIRONMENT and DT_PLATFORM_TOKEN env vars.",
     }
 
 
 def _get_dt_token() -> str:
-    """Return the best available Dynatrace token: classic token preferred, fallback to platform token."""
     classic = os.environ.get("DT_CLASSIC_TOKEN", "").strip()
     if classic:
         return classic
     return os.environ.get("DT_PLATFORM_TOKEN", "").strip()
 
 
+def _has_classic_api() -> bool:
+    return bool(os.environ.get("DT_CLASSIC_TOKEN", "").strip())
+
+
 def query_dynatrace_problems(status: str = "OPEN") -> dict:
-    """Query Dynatrace for active problems via the API.
-
-    Args:
-        status: Problem status filter - "OPEN", "CLOSED", or "ALL" (default: "OPEN")
-
-    Returns:
-        Dict with problems data or error message.
-    """
     dt_env = os.environ.get("DT_ENVIRONMENT", "").strip()
     dt_token = _get_dt_token()
     if not dt_env or not dt_token:
         return {"configured": False, "error": "Dynatrace not configured"}
+    if dt_token and not _has_classic_api():
+        return {"configured": True, "error": "Classic API token required for direct API access. Set DT_CLASSIC_TOKEN env var."}
     try:
         base = _normalize_dt_url(dt_env)
         url = f"https://{base}/api/v2/problems"
@@ -112,19 +113,12 @@ def query_dynatrace_problems(status: str = "OPEN") -> dict:
 
 
 def query_dynatrace_entities(entity_type: str = None, limit: int = 10) -> dict:
-    """Query Dynatrace for monitored entities via the API.
-
-    Args:
-        entity_type: Type filter (e.g. "HOST", "SERVICE", "APPLICATION"). None for all.
-        limit: Max entities to return (default: 10)
-
-    Returns:
-        Dict with entities data or error message.
-    """
     dt_env = os.environ.get("DT_ENVIRONMENT", "").strip()
     dt_token = _get_dt_token()
     if not dt_env or not dt_token:
         return {"configured": False, "error": "Dynatrace not configured"}
+    if dt_token and not _has_classic_api():
+        return {"configured": True, "error": "Classic API token required for direct API access. Set DT_CLASSIC_TOKEN env var."}
     try:
         base = _normalize_dt_url(dt_env)
         url = f"https://{base}/api/v2/entities"
@@ -166,10 +160,11 @@ def _extract_hostname(url_or_hostname: str) -> str:
 
 
 def _search_entities_by_name(name_fragment: str, limit: int = 20) -> list:
-    """Search Dynatrace entities whose name contains the given fragment."""
     dt_env = os.environ.get("DT_ENVIRONMENT", "").strip()
     dt_token = _get_dt_token()
     if not dt_env or not dt_token:
+        return []
+    if dt_token and not _has_classic_api():
         return []
     try:
         base = _normalize_dt_url(dt_env)
@@ -187,10 +182,11 @@ def _search_entities_by_name(name_fragment: str, limit: int = 20) -> list:
 
 
 def _get_entity_health_state(entity_id: str) -> str:
-    """Get the health state of a Dynatrace entity."""
     dt_env = os.environ.get("DT_ENVIRONMENT", "").strip()
     dt_token = _get_dt_token()
     if not dt_env or not dt_token:
+        return "unknown"
+    if dt_token and not _has_classic_api():
         return "unknown"
     try:
         base = _normalize_dt_url(dt_env)
@@ -223,6 +219,8 @@ def query_dynatrace_for_domain(domain: str) -> dict:
     dt_token = _get_dt_token()
     if not dt_env or not dt_token:
         return {"configured": False, "domain": domain, "error": "Dynatrace not configured"}
+    if dt_token and not _has_classic_api():
+        return {"configured": True, "domain": domain, "error": "Classic API token required. Set DT_CLASSIC_TOKEN env var.", "has_monitoring_data": False}
 
     try:
         hostname = _extract_hostname(domain)
@@ -306,18 +304,12 @@ def query_dynatrace_for_domain(domain: str) -> dict:
 
 
 def query_dynatrace_davis_analysis(problem_id: str) -> dict:
-    """Fetch Davis AI root cause analysis for a specific problem.
-
-    Args:
-        problem_id: The Dynatrace problem ID to analyze (e.g. "-1908432690963577333")
-
-    Returns:
-        Dict with Davis analysis including root cause, impact, severity, and evidence.
-    """
     dt_env = os.environ.get("DT_ENVIRONMENT", "").strip()
     dt_token = _get_dt_token()
     if not dt_env or not dt_token:
         return {"configured": False, "error": "Dynatrace not configured"}
+    if dt_token and not _has_classic_api():
+        return {"configured": True, "error": "Classic API token required. Set DT_CLASSIC_TOKEN env var."}
     try:
         base = _normalize_dt_url(dt_env)
         url = f"https://{base}/api/v2/problems/{problem_id}"

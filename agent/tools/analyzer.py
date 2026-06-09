@@ -173,8 +173,10 @@ def generate_health_report(
             })
         elif probs.get("configured") and probs.get("error"):
             detail = probs.get("error", "API unavailable")
-            if "403" in detail:
-                detail = "Dynatrace MCP available (direct API requires classic token)"
+            if "Classic API token" in detail:
+                detail = "MCP available — set DT_CLASSIC_TOKEN for direct API access"
+            elif "403" in detail:
+                detail = "MCP available — direct API requires elevated token scopes"
             report["checks"].append({
                 "category": "Dynatrace Problems",
                 "status": "info",
@@ -203,8 +205,10 @@ def generate_health_report(
             })
         elif ents.get("configured") and ents.get("error"):
             detail = ents.get("error", "API unavailable")
-            if "403" in detail:
-                detail = "Dynatrace MCP available (direct API requires classic token)"
+            if "Classic API token" in detail:
+                detail = "MCP available — set DT_CLASSIC_TOKEN for direct API access"
+            elif "403" in detail:
+                detail = "MCP available — direct API requires elevated token scopes"
             report["checks"].append({
                 "category": "Dynatrace Entities",
                 "status": "info",
